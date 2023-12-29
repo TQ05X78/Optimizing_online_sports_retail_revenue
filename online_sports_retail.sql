@@ -1,0 +1,347 @@
+drop table if exists info;
+
+CREATE TABLE info
+(
+    product_name VARCHAR(100),
+    product_id VARCHAR(11) PRIMARY KEY,
+    description VARCHAR(700)
+);
+
+Copy info(product_name, product_id, description)
+from 'D:\Data\SQL_data\archive(6)\info.csv'
+Delimiter ',' 
+CSV Header;
+
+drop table if exists finance;
+
+CREATE TABLE finance
+(
+    product_id VARCHAR(11) PRIMARY KEY,
+    listing_price FLOAT,
+    sale_price FLOAT,
+    discount FLOAT,
+    revenue FLOAT
+);
+
+
+Copy finance(product_id,listing_price,sale_price,discount,revenue)
+from 'D:\Data\SQL_data\archive(6)\finance.csv'
+Delimiter ',' 
+CSV Header;
+
+drop table if exists reviews;
+
+
+CREATE TABLE reviews
+(
+    product_id VARCHAR(11) PRIMARY KEY,
+    rating FLOAT,
+    reviews FLOAT
+);
+
+Copy reviews(product_id,rating,reviews)
+from 'D:\Data\SQL_data\archive(6)\reviews.csv'
+Delimiter ',' 
+CSV Header;
+
+drop table if exists traffic;
+
+
+CREATE TABLE traffic
+(
+    product_id VARCHAR(11) PRIMARY KEY,
+    last_visited TIMESTAMP
+);
+
+Copy traffic(product_id,last_visited)
+from 'D:\Data\SQL_data\archive(6)\traffic.csv'
+Delimiter ',' 
+CSV Header;
+
+drop table if exists brands;
+
+
+CREATE TABLE brands
+(
+    product_id VARCHAR(11) PRIMARY KEY,
+    brand VARCHAR(7)
+);
+
+Copy brands(product_id,brand)
+from 'D:\Data\SQL_data\archive(6)\brands.csv'
+Delimiter ',' 
+CSV Header;
+
+
+
+
+Select * from info;
+Select * from brands;
+Select * from finance; 
+Select * from reviews;
+Select * from traffic;
+
+Select *
+from info
+where product_name IS null
+or product_id IS null
+or description IS null;
+
+
+Select * from brands;
+
+Select * 
+from brands
+where product_id IS null
+or brand IS null;
+
+Select * from finance;
+
+Select *
+from finance
+where product_id IS null or 
+listing_price IS null or 
+sale_price IS null or 
+discount IS null or 
+revenue IS null;
+
+
+Select * from reviews;
+
+Select * 
+from reviews
+where product_id IS null or 
+rating IS null
+or reviews IS null;
+
+
+Select * from traffic;
+
+Select *
+from traffic
+where product_id IS null
+or last_visited IS null;
+
+-- Deleting null values--
+
+Delete
+from info
+where product_name IS null
+or product_id IS null
+or description IS null;
+
+Select * from brands;
+
+Delete 
+from brands
+where product_id IS null
+or brand IS null;
+
+Select * from finance;
+
+Delete
+from finance
+where product_id IS null or 
+listing_price IS null or 
+sale_price IS null or 
+discount IS null or 
+revenue IS null;
+
+
+
+Delete
+from reviews
+where product_id IS null or 
+rating IS null
+or reviews IS null;
+
+
+Delete
+from traffic
+where product_id IS null
+or last_visited IS null;
+
+
+
+
+-- 1. Counting missing values
+
+SELECT count(*) as total_rows,
+    count(i.description) as count_description,
+    count(f.listing_price) as count_listing_price,
+    count(t.last_visited) as count_last_visited
+FROM info i 
+JOIN finance f
+ON i.product_id = f.product_id 
+JOIN traffic t
+ON i.product_id = t.product_id;
+
+
+-- 2. How do the price points of Nike and Adidas products differ?
+
+SELECT b.brand, 
+       CAST(listing_price AS Integer) as listing_price, 
+       COUNT(*)
+FROM brands b
+JOIN finance f
+ON b.product_id = f.product_id
+WHERE f.listing_price > 0
+GROUP BY b.brand, listing_price
+ORDER BY listing_price DESC;
+
+
+
+-- 3 Labeling price ranges : Assigning labels to different price ranges by brand and its revenue.
+
+SELECT b.brand,
+        COUNT(*),
+        SUM(f.revenue) as total_revenue,
+        CASE WHEN f.listing_price < 42 THEN 'Budget'
+             WHEN f.listing_price >= 42 AND f.listing_price < 74 THEN 'Average'
+             WHEN f.listing_price >= 74 AND f.listing_price < 129 THEN 'Expensive'
+            ELSE 'Elite' 
+        END AS price_category
+FROM brands b
+JOIN finance f
+ON b.product_id = f.product_id
+GROUP BY b.brand, price_category
+ORDER BY total_revenue DESC;
+
+
+
+
+
+-- 4. Is there a difference in the amount of discount offered between the brands?
+
+SELECT b.brand,
+       AVG(discount)*100 as average_discount
+FROM brands b
+JOIN finance f
+ON b.product_id = f.product_id
+GROUP BY b.brand;
+
+
+
+-- 5. Is there any correlation between revenue and reviews? And if so, how strong is it?
+
+SELECT CORR(f.revenue, r.reviews) AS review_revenue_corr
+FROM finance f
+JOIN reviews r
+ON f.product_id = r.product_id;
+
+
+-- 6. Does the length of a product's description influence a product's rating and review. 
+
+SELECT TRUNC(Length(description)/100.0) *100 as description_length,
+       ROUND(AVG(CAST(rating AS numeric)),2) as  average_rating
+FROM info i
+JOIN reviews r 
+ON i.product_id = r.product_id
+GROUP BY description_length
+ORDER BY description_length;
+
+
+-- 7. Are there any trends or gaps in the volume of reviews by month?
+SELECT b.brand, 
+       DATE_PART('month', last_visited) as month,
+       COUNT(r.*) as num_reviews
+FROM brands b
+JOIN traffic t
+ON b.product_id = t.product_id
+JOIN reviews r
+ON r.product_id = t.product_id
+GROUP BY b.brand, DATE_PART('month', last_visited)
+ORDER BY b.brand, DATE_PART('month', last_visited);
+
+
+-- 8. How much of the company's stock consists of footwear items? What is the median revenue generated by these products?
+
+with footwear AS 
+( SELECT i.description, 
+         f.revenue
+  FROM info i
+  INNER JOIN finance f
+  ON i.product_id = f.product_id
+  WHERE i.description ILIKE '%shoe%' 
+        OR i.description ILIKE '%trainer%' 
+        OR i.description ILIKE '%foot%' 
+        AND i.description IS NOT NULL 
+)
+select COUNT(*) as num_footwear_products,
+       percentile_disc(0.5) WITHIN GROUP(ORDER BY revenue) as median_footwear_revenue
+FROM footwear;
+
+
+
+-- 9. How does footwear's median revenue differ from clothing products?
+
+--Footwear product performance
+
+with footwear AS 
+( SELECT i.description, 
+         f.revenue
+  FROM info i
+  INNER JOIN finance f
+  ON i.product_id = f.product_id
+  WHERE i.description ILIKE '%shoe%' 
+        OR i.description ILIKE '%trainer%' 
+        OR i.description ILIKE '%foot%'  
+)
+select COUNT(*) as num_footwear_products,
+       percentile_disc(0.5) WITHIN GROUP(ORDER BY revenue) as median_footwear_revenue
+FROM footwear;
+
+
+
+
+
+
+--Clothing product performance
+
+with footwear AS 
+( SELECT i.description, 
+         f.revenue
+  FROM info i
+  INNER JOIN finance f
+  ON i.product_id = f.product_id
+  WHERE i.description ILIKE '%shoe%' 
+        OR i.description ILIKE '%trainer%' 
+        OR i.description ILIKE '%foot%' 
+        )
+select COUNT(i.*) as num_clothing_products,
+       percentile_disc(0.5) WITHIN GROUP(ORDER BY revenue) as median_clothing_revenue
+FROM info i
+INNER JOIN finance f
+ON i.product_id = f.product_id
+WHERE i.description NOT IN (select description from footwear);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
