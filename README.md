@@ -10,7 +10,6 @@ The goal of this project is to improve revenue of online Retail Company and prod
 
 ## TASK LIST :
 
-     
       1. How do the price points of Nike and Adidas products differ?
      
       2. Is there a difference in the amount of discount offered between the brands?
@@ -40,17 +39,17 @@ SQL functions that I used in this project:
 
 ## Analysis & Insights :
 
-    - The brand needs to explore opportunities to develop products in the “Expensive” and “Elite” categories that have higher revenue potential.
+    The brand needs to explore opportunities to develop products in the “Expensive” and “Elite” categories that have higher revenue potential.
     
-    - Focusing on product quality, customer service, and holistic marketing strategies can help improve reviews and revenue.
+    Focusing on product quality, customer service, and holistic marketing strategies can help improve reviews and revenue.
      
-    - Analyzing factors that influence monthly review fluctuations and planning appropriate marketing strategies.
+    Analyzing factors that influence monthly review fluctuations and planning appropriate marketing strategies.
      
-    - Continuously monitoring product categories like footwear and clothing and making relevant price adjustments or marketing strategies.
+    Continuously monitoring product categories like footwear and clothing and making relevant price adjustments or marketing strategies.
      
-    - Using this data as a foundation to design more effective and customer-oriented business strategies.
+    Using this data as a foundation to design more effective and customer-oriented business strategies.
      
-    - All of these recommendations can assist the brand in enhancing product performance, increasing revenue, and providing a better experience to customers.
+    All of these recommendations can assist the brand in enhancing product performance, increasing revenue, and providing a better experience to customers.
 
 
 
